@@ -409,4 +409,30 @@ export type AuthContext<Options extends BetterAuthOptions = BetterAuthOptions> =
 			runInBackgroundOrAwait: (
 				promise: Promise<unknown> | void,
 			) => Awaitable<unknown>;
+			/**
+			 * A generic key-value store for plugins to attach custom state,
+			 * adapters, or other data to the auth context.
+			 *
+			 * Plugins can use this to share adapters (e.g., a graph/authorization
+			 * adapter) or other runtime state across endpoints and hooks without
+			 * requiring changes to the core `AuthContext` type.
+			 *
+			 * @example
+			 * ```ts
+			 * // In plugin init:
+			 * init(ctx) {
+			 *   return {
+			 *     context: {
+			 *       extensions: {
+			 *         myAdapter: createMyAdapter(ctx.options),
+			 *       },
+			 *     },
+			 *   };
+			 * }
+			 *
+			 * // In plugin endpoints:
+			 * const adapter = ctx.context.extensions.myAdapter as MyAdapter;
+			 * ```
+			 */
+			extensions: Record<string, unknown>;
 		};

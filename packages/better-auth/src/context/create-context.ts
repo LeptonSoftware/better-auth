@@ -398,6 +398,7 @@ Most of the features of Better Auth will not work correctly.`,
 		},
 		getPlugin: getPluginFn,
 		hasPlugin: hasPluginFn as never,
+		extensions: {},
 	};
 
 	const initOrPromise = runPluginInit(ctx);
