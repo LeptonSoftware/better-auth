@@ -9,6 +9,7 @@ export type DBAdapterDebugLogOption =
 			 */
 			logCondition?: (() => boolean) | undefined;
 			create?: boolean | undefined;
+			createMany?: boolean | undefined;
 			update?: boolean | undefined;
 			updateMany?: boolean | undefined;
 			findOne?: boolean | undefined;
@@ -397,6 +398,26 @@ export type DBAdapter<Options extends BetterAuthOptions = BetterAuthOptions> = {
 		 */
 		forceAllowId?: boolean | undefined;
 	}) => Promise<R>;
+	/**
+	 * Create multiple records in a single operation.
+	 *
+	 * This is useful for bulk inserts where you need to create many records
+	 * at once, such as seeding data or batch operations in plugins.
+	 *
+	 * If not supported by the adapter, it will fall back to sequential
+	 * `create` calls.
+	 */
+	createMany?: <T extends Record<string, any>, R = T>(data: {
+		model: string;
+		data: Omit<T, "id">[];
+		select?: string[] | undefined;
+		/**
+		 * By default, any `id` provided in `data` will be ignored.
+		 *
+		 * If you want to force the `id` to be the same as the `data.id`, set this to `true`.
+		 */
+		forceAllowId?: boolean | undefined;
+	}) => Promise<R[]>;
 	findOne: <T>(data: {
 		model: string;
 		where: Where[];
@@ -471,6 +492,21 @@ export interface CustomAdapter {
 		data: T;
 		select?: string[] | undefined;
 	}) => Promise<T>;
+	/**
+	 * Create multiple records in a single operation.
+	 *
+	 * Optional. If not provided, the adapter factory will fall back to
+	 * sequential `create` calls.
+	 */
+	createMany?: <T extends Record<string, any>>({
+		data,
+		model,
+		select,
+	}: {
+		model: string;
+		data: T[];
+		select?: string[] | undefined;
+	}) => Promise<T[]>;
 	update: <T>(data: {
 		model: string;
 		where: CleanedWhere[];

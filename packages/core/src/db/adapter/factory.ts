@@ -931,6 +931,77 @@ export const createAdapterFactory =
 				);
 				return transformed;
 			},
+			createMany: async <T extends Record<string, any>, R = T>({
+				data: unsafeDataArray,
+				model: unsafeModel,
+				select,
+				forceAllowId = false,
+			}: {
+				model: string;
+				data: T[];
+				select?: string[];
+				forceAllowId?: boolean;
+			}): Promise<R[]> => {
+				const model = getModelName(unsafeModel);
+				unsafeModel = getDefaultModelName(unsafeModel);
+
+				if (adapterInstance.createMany) {
+					const transformedData: T[] = [];
+					for (const item of unsafeDataArray) {
+						let data = item;
+						if (!config.disableTransformInput) {
+							data = (await transformInput(
+								item,
+								unsafeModel,
+								"create",
+								forceAllowId,
+							)) as T;
+						}
+						transformedData.push(data);
+					}
+
+					const results = await withSpan(
+						`db createMany ${model}`,
+						{
+							[ATTR_DB_OPERATION_NAME]: "createMany",
+							[ATTR_DB_COLLECTION_NAME]: model,
+						},
+						() =>
+							adapterInstance.createMany!<T>({
+								data: transformedData,
+								model,
+							}),
+					);
+
+					const transformedResults: R[] = [];
+					for (const res of results) {
+						let transformed = res as any;
+						if (!config.disableTransformOutput) {
+							transformed = await transformOutput(
+								res as any,
+								unsafeModel,
+								select,
+								undefined,
+							);
+						}
+						transformedResults.push(transformed);
+					}
+					return transformedResults;
+				}
+
+				// Fallback: sequential create calls through this adapter
+				const results: R[] = [];
+				for (const item of unsafeDataArray) {
+					const result = await adapter.create<T, R>({
+						data: item,
+						model: unsafeModel,
+						select,
+						forceAllowId,
+					});
+					results.push(result);
+				}
+				return results;
+			},
 			update: async <T>({
 				model: unsafeModel,
 				where: unsafeWhere,
