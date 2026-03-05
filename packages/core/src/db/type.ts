@@ -243,6 +243,14 @@ export type DBFieldAttributeConfig = {
 					| "cascade"
 					| "set null"
 					| "set default";
+				/**
+				 * Optional name for the foreign key constraint or relationship.
+				 *
+				 * Useful for adapters (e.g., Drizzle) that need explicit
+				 * relationship names to disambiguate multiple references
+				 * between the same models.
+				 */
+				name?: string;
 		  }
 		| undefined;
 	unique?: boolean | undefined;
